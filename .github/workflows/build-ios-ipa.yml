@@ -28,6 +28,9 @@ jobs:
             unzip -q "$RUNNER_TEMP/j2me-ios-source.zip" -d ios
           fi
 
+      - name: Normalize shell script line endings
+        run: perl -pi -e 's/\r$//' ios/build-unsigned-ipa.sh ios/JarBox/j2me_api/build.sh
+
       - name: Build unsigned IPA
         run: OUTPUT_DIR="$RUNNER_TEMP/j2me-ios-output" bash ./ios/build-unsigned-ipa.sh
 
