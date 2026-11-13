@@ -1,0 +1,40 @@
+name: Build unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/build-ios-ipa.yml'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Restore uploaded iOS source archive
+        shell: bash
+        run: |
+          if compgen -G 'ios/J2ME-Loader-iOS-Source.zip.part-*' > /dev/null; then
+            cat ios/J2ME-Loader-iOS-Source.zip.part-* > "$RUNNER_TEMP/j2me-ios-source.zip"
+            unzip -q "$RUNNER_TEMP/j2me-ios-source.zip" -d ios
+          fi
+
+      - name: Build unsigned IPA
+        run: OUTPUT_DIR="$RUNNER_TEMP/j2me-ios-output" bash ./ios/build-unsigned-ipa.sh
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: J2ME-Loader-iOS-unsigned-ipa
+          path: ${{ runner.temp }}/j2me-ios-output/J2ME-Loader-iOS-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
